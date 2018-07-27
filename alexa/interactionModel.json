@@ -271,12 +271,12 @@
                     "name": "NumberOfClaimsinPastFiveYrsIntent",
                     "slots": [],
                     "samples": [
-                        "Give me the number of clains in the past five years",
-                        "Give me my number of clains in the past five years",
-                        "Tell me the number of clains in the past five years",
-                        "Tell me my number of clains in the past five years",
-                        "What is the number of clains in the past five years",
-                        "What is my number of clains in the past five years"
+                        "Give me the number of claims in the past five years",
+                        "Give me my number of claims in the past five years",
+                        "Tell me the number of claims in the past five years",
+                        "Tell me my number of claims in the past five years",
+                        "What is the number of claims in the past five years",
+                        "What is my number of claims in the past five years"
                     ]
                 },
                 {

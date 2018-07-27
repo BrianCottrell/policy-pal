@@ -11,6 +11,7 @@
 'use strict';
 const Alexa = require('alexa-sdk');
 var http = require('http');
+var https = require('https');
 
 //=========================================================================================================================================
 //TODO: The items below this comment need your attention.
@@ -21,7 +22,6 @@ var http = require('http');
 const APP_ID = 'amzn1.ask.skill.6835eb43-0b6d-40dc-813c-42cda1fad474';
 
 var urlPrefix = 'http://solartis.herokuapp.com/amazon/';
-var userID;
 
 const SKILL_NAME = 'Policy Pal';
 const PROMPT = 'What would you like to know about?';
@@ -47,7 +47,7 @@ var data = {
   },
   "Policy": {
     "ProgramName": "Healthcare",
-    "PolicyType": "Group",
+    "PolicyType": "Individual",
     "ZipCode": "35005",
     "State": "AL",
     "EffectiveDate": "2018-08-14",
@@ -120,15 +120,32 @@ var data = {
 const handlers = {
     'LaunchRequest': function () {
         var alexasdk = this;
-        getPolicy(function(){
-            alexasdk.emit(':ask', PROMPT, REPEAT);
-        });
+        if (this.event.session.user.accessToken) {
+            https.get('https://api.amazon.com/user/profile?access_token=' + this.event.session.user.accessToken, 
+            function(res){
+                var str = '';
+                console.log('Response is '+ res.statusCode);
+
+                res.on('data', function (chunk) {
+                    str += chunk;
+                });
+              
+                res.on('end', function () {
+                    var userData = JSON.parse(str);
+                    getPolicy(userData.user_id, function(){
+                        alexasdk.emit(':ask', PROMPT, REPEAT);
+                    });
+                });
+            });
+        } else {
+            alexasdk.emit(':tell', 'Please link your amazon account in the Alexa app.', 'Please link your amazon account in the Alexa app.');
+        }
     },
     'ProgramNameIntent': function () {
         const speechOutput = 'Your program name is ' + data.Policy.ProgramName;
 
         this.response.cardRenderer(SKILL_NAME, speechOutput);
-        this.response.speak(speechOutput).listen(REPROMPT)
+        this.response.speak(speechOutput).listen(REPROMPT);
         this.emit(':responseReady');
     },
     'PolicyTypeIntent': function () {
@@ -416,15 +433,13 @@ const handlers = {
 
 exports.handler = function (event, context, callback) {
     const alexa = Alexa.handler(event, context, callback);
-    userID = event['session']['user']['userId'];
     alexa.APP_ID = APP_ID;
     alexa.registerHandlers(handlers);
     alexa.execute();
 };
 
-function getPolicy(callback) {
-    var url = urlPrefix + 'amzn1.ask.account.123';
-    // var url = urlPrefix + userID;
+function getPolicy(userID, callback) {
+    var url = urlPrefix + userID;
     console.log("Request Sent");
 
     http.get(url, function(res) {
@@ -444,3 +459,4 @@ function getPolicy(callback) {
         console.log("Got error: ", e);
         callback();
     });
+}
